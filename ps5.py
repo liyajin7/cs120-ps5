@@ -1,7 +1,7 @@
 from itertools import product, combinations
 from random import randint
 from re import S
-from tkinter import N
+# from tkinter import N
 
 '''
 Before you start: Read the README and the Graph implementation below.
