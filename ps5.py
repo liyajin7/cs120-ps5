@@ -130,10 +130,6 @@ def bfs_2_coloring(G, precolored_nodes=None):
         if len(precolored_nodes) == G.N:
             return G.colors
 
-
-    # TODO: Complete this function by implementing two-coloring using the colors 0 and 1.
-    # If there is no valid coloring, reset all the colors to None using G.reset_colors()
-
     # print(G.edges)
 
     # # initialize not-visited vertices
@@ -142,8 +138,10 @@ def bfs_2_coloring(G, precolored_nodes=None):
     #     if (i != visited[i]):
     #         notVisited.add(i)
 
-    # while loop accounts for graphs that aren't completely connected
+    # while loop to restart BFS if not all vertices visited; accounts for graphs that aren't
+    # connected
     while (len(visited) < G.N):
+
         # find arbitrary starting vertex
         s = 0
         while (s in visited):
@@ -157,18 +155,17 @@ def bfs_2_coloring(G, precolored_nodes=None):
         
         G.colors[s] = 0
         F = [s]
-        # S = visited!
 
         # BFS for all graphs from single starting source
         while (len(F) > 0):
-            # @LIYA faster way to do this?
+
             # set current element to the first in the frontier
             curr = F.pop(0)
+            # curr = F[0]
             # F = F.remove(curr)
 
             # print("\n\nNEW LOOP. curr = ", curr)
-            # print("frontier F = ", F)
-
+            
             # print("neighbors of curr: ", G.edges[curr])
             for neigh in G.edges[curr]:
 
@@ -176,30 +173,24 @@ def bfs_2_coloring(G, precolored_nodes=None):
                 # then no 2-coloring: return None
                 if (G.colors[curr] == G.colors[neigh]):
                     # print("IF LOOP: G.colors[curr] == G.colors[neigh]")
-                    # print("G.colors[curr] == ", G.colors[curr])
                     G.reset_colors()
                     return None
 
                 # if neighbor hasn't been visited, color according to current node color
                 if not (neigh in visited):
                     # print("IF LOOP: neighbor hasn't been visited")
-                    if (G.colors[curr] == 0):
-                        G.colors[neigh] = 1
-                    else: G.colors[neigh] = 0
+                    G.colors[neigh] = 1 if (G.colors[curr] == 0) else 0
 
-                    # add neighbor to front of frontier
+                    # add neighbor to front of frontier to be popped next
                     F.insert(0, neigh)
 
-                # print("NEW frontier F = ", F)
-
-            # if not (curr in visited): @LIYA needed?
+            # if not (curr in visited):
             visited.add(curr)
 
+
     if G.is_graph_coloring_valid():
-        # print("\n\nULTIMATE: VALID COLORING")
         return G.colors
     else:
-        # print("\n\nULTIMATE: NOTTT A VALID COLORING")
         G.reset_colors()
         return None
 
@@ -234,13 +225,6 @@ def bfs_2_coloring(G, precolored_nodes=None):
     # and run BFS again
 
 
-
-    # TODO: Complete this function by implementing two-coloring using the colors 0 and 1.
-    # If there is no valid coloring, reset all the colors to None using G.reset_colors()
-    
-    G.reset_colors()
-    return None
-
 '''
     Part B: Implement is_independent_set.
 '''
@@ -248,7 +232,15 @@ def bfs_2_coloring(G, precolored_nodes=None):
 # Given an instance of the Graph class G and a subset of precolored nodes,
 # Checks if subset is an independent set in G 
 def is_independent_set(G, subset):
-    # TODO: Complete this function
+
+    # for every vertex in the set
+    for v in subset:
+        # iterate through all its neighbors
+        for neigh in G.edges[v]:
+
+            # if any neighbor of a vertex in the set is also in the set, set is not independent
+            if (neigh in subset):
+                return False
 
     return True
 
@@ -276,9 +268,30 @@ def is_independent_set(G, subset):
 # If successful, modifies G.colors and returns the coloring.
 # If no coloring is possible, resets all of G's colors to None and returns None.
 def iset_bfs_3_coloring(G):
-    # TODO: Complete this function.
 
-    G.reset_colors()
+    # see if graph is first 2-colorable
+    attempt = bfs_2_coloring(G, [])
+    if (attempt != None):
+        return attempt
+
+    # enumerate all possible independent sets of possible sizes at most n/3
+    for size in range(G.N//3 + 1):
+        
+        # generate all possible subsets of size size
+        possible_subsets = combinations(range(G.N), size)
+
+        # check if each subset is iset
+        for subset in possible_subsets:
+            if is_independent_set(G, list(subset)):
+                
+                # according to Lemme 2.1, colors "subset" vertices as 2 (f_S), attempts to assign
+                # 2-coloring to the rest of the vertices (f_{-S})
+                coloring_attempt = bfs_2_coloring(G, list(subset))
+
+                if (coloring_attempt != None):
+                    return coloring_attempt
+
+    # return None if no possible 3-coloring found
     return None
 
 # Feel free to add miscellaneous tests below!
